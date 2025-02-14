@@ -7,7 +7,7 @@ import { checkAttendance, getAttendances } from "../services/api";
 const AttendancePage = () => {
 	const { eventId, title } = useParams();
 	const queryClient = useQueryClient();
-	const { data, isLoading, isFetching, isError } = useQuery({
+	const { data, isLoading, isFetching } = useQuery({
 		queryKey: ["attendance"],
 		queryFn: () => getAttendances(eventId),
 	});
@@ -17,6 +17,8 @@ const AttendancePage = () => {
 		mutate,
 		data: scannedUser,
 		isPending,
+		isError,
+		error,
 	} = useMutation({
 		mutationKey: ["check-attendance"],
 		mutationFn: checkAttendance,
@@ -37,8 +39,13 @@ const AttendancePage = () => {
 				};
 			});
 		},
+		onError: (error) => {
+			console.log(error);
+		},
 	});
-
+	if (isError) {
+		console.log(error);
+	}
 	const html5QrCode = useRef(null);
 	const config = { fps: 20, qrbox: { width: 300, height: 300 } };
 
@@ -93,34 +100,30 @@ const AttendancePage = () => {
 	console.log(present);
 
 	return (
-		<div className="text-white font-roboto max-w-screen-2xl ">
-			<header className="text-center py-3 text-pink-300 ">
+		<div className="text-white font-roboto max-w-screen-xl mx-auto  attend-page">
+			<header className="text-center  text-pink-300 ">
 				<h1 className="font-bold sm:text-xl md:text-2xl bg-gray-800 w-fit mx-auto py-2 px-5 rounded-md">
 					{title}
 				</h1>
 			</header>
-			<main className="md:p-3 min-h-screen">
+			<main className="md:p-3 min-h-screen p-2">
 				<div>
-					<button
-						className=" bg-gray-400 hover:bg-gray-500 text-lg p-1 px-2 rounded-md"
-						onClick={() => {
-							navigate(-1);
-						}}
-					>
-						Back
-					</button>
-					<h2 className=" text-lg py-2">Applicants information:-</h2>
-					<div className="flex gap-5 w-fit bg-primary px-3 py-2">
-						<p>Total: {data?.attendances?.length}</p>
-						<p className="text-green-300">Present: {present}</p>
-						<p className="text-red-300">
-							Absent:
-							{data?.attendances?.length - present ? data?.attendances?.length - present : 0}
-						</p>
+					<h2 className=" text-lg py-1">Applicants information:-</h2>
+					<div className="flex flex-col sm:flex-row gap-5  bg-primary px-3 sm:px-0 ">
+						<div className="flex gap-5 w-fit bg-primary px-3 py-2">
+							<p>Total: {data?.attendances?.length}</p>
+							<p className="text-green-300">Present: {present}</p>
+							<p className="text-red-300">
+								Absent:
+								{data?.attendances?.length - present
+									? data?.attendances?.length - present
+									: 0}
+							</p>
+						</div>
 					</div>
 				</div>
-				<div className="flex flex-col font-mono  sm:flex-row justify-between h-[570px]">
-					<section className="w-full sm:w-2/3 min-h-40  sm:border-r-2 border-gray-400 mt-3 pr-2 overflow-auto attendance-scrollbar">
+				<div className="flex flex-col font-mono  sm:flex-row justify-between ">
+					<section className="w-full sm:w-2/3 min-h-40  sm:border-r-2 border-gray-400 max-h-[570px] mt-3 pr-2 overflow-auto attendance-scrollbar ">
 						<table className="w-full  text-center bg-gray-900">
 							<thead className="sticky top-0 bg-gray-900 z-10">
 								<tr className=" bg-gray-900">
@@ -140,9 +143,11 @@ const AttendancePage = () => {
 										<td>{i + 1}</td>
 										<td className=" p-2">{applicant?.userName}</td>
 										<td>{applicant?.email}</td>
-										<td className="">
+										<td className="flex flex-wrap gap-2 justify-center">
 											{applicant?.appliedTo.map((group) => (
-												<span key={group}>{group + " "}</span>
+												<span className="block" key={group}>
+													{group + ","}
+												</span>
 											))}
 										</td>
 										<td
@@ -186,11 +191,18 @@ const AttendancePage = () => {
 
 						<div className="  self-start border-2 w-full p-3">
 							<h3 className="text-lg font-bold text-green-600 mb-3">Scanner results:</h3>
-							<div className="pl-3 ">
-								<p>Name: {scannedUser?.data?.userName}</p>
-								<p>E-mail: {scannedUser?.data?.email}</p>
-								<p>Registered to: {scannedUser?.data?.userName}</p>
-							</div>
+							{scannedUser && (
+								<div className="pl-3 ">
+									<p>Name: {scannedUser?.data?.userName}</p>
+									<p>E-mail: {scannedUser?.data?.email}</p>
+									<p>Registered to: {scannedUser?.data?.userName}</p>
+								</div>
+							)}
+							{isError && (
+								<div className="text-red-500  ml-auto">
+									<h3>{error?.response?.data?.message}</h3>
+								</div>
+							)}
 						</div>
 					</section>
 				</div>

@@ -7,52 +7,48 @@ export const getAttendance = async (req, res) => {
 		const { eventId } = req.params;
 		console.log(eventId);
 		const attendances = await Application.aggregate([
-			//join collections
-			// Lookup (populate) the `eventId` field from the `events` collection
 			{
 				$match: {
-					eventId: new mongoose.Types.ObjectId(eventId), // Filter by eventId
+					eventId: new mongoose.Types.ObjectId(eventId),
 				},
 			},
 			{
 				$lookup: {
-					from: "events", // Collection for events
-					localField: "eventId", // Field in Attendance
-					foreignField: "_id", // Field in Events
+					from: "events",
+					let: { eventId: "$eventId" }, // Use let to access the field
+					pipeline: [
+						{
+							$match: {
+								$expr: { $eq: ["$_id", "$$eventId"] }, // Compare using $expr
+							},
+						},
+						{ $project: { _id: 1 /* other event fields you need */ } }, // Project only needed event fields
+					],
 					as: "event",
 				},
 			},
-			// Step 2: Unwind the `event` array
-			{
-				$unwind: {
-					path: "$event",
-					preserveNullAndEmptyArrays: true,
-				},
-			},
-			// Step 3: Lookup (populate) the `userId` field from the `users` collection
 			{
 				$lookup: {
-					from: "users", // Collection for users
-					localField: "userId", // Field in Attendance
-					foreignField: "_id", // Field in Users
+					from: "users",
+					let: { userId: "$userId" }, // Use let to access the field
+					pipeline: [
+						{
+							$match: {
+								$expr: { $eq: ["$_id", "$$userId"] }, // Compare using $expr
+							},
+						},
+						{ $project: { _id: 1, userName: 1, email: 1 } }, // Project only needed user fields
+					],
 					as: "user",
 				},
 			},
-			// Step 4: Unwind the `user` array
-			{
-				$unwind: {
-					path: "$user",
-					preserveNullAndEmptyArrays: true,
-				},
-			},
-			// Step 5: Project only the required fields
 			{
 				$project: {
-					_id: 1, // include attendance ID
-					userName: "$user.userName", // User's name
-					email: "$user.email",
-					appliedTo: "$appliedTo",
-					isAttended: "$isAttended",
+					_id: 1,
+					userName: { $arrayElemAt: ["$user.userName", 0] }, // Access userName from the user array
+					email: { $arrayElemAt: ["$user.email", 0] }, // Access email from the user array
+					appliedTo: 1,
+					isAttended: 1,
 				},
 			},
 		]);
