@@ -10,11 +10,12 @@ dotenv.config();
 const app = express();
 app.use(
 	cors({
-		orgin: [process.env.CLIENT_URL, "*"],
+		orgin: process.env.CLIENT_URL,
 		credentials: true,
 	})
 );
 app.use(express.json());
+app.use("/api/attendance", attendanceRoutes);
 app.get("/api/ping", (req, res) => {
 	res.json({ message: "Hello from Vercel API!" });
 });
@@ -25,8 +26,6 @@ app.use(express.static(path.join(__dirname, "client/build")));
 app.get("*", (req, res) => {
 	res.sendFile(path.join(__dirname, "client/build", "index.html"));
 });
-
-app.use("/api/attendance", attendanceRoutes);
 
 app.listen(process.env.PORT || 5000, () => {
 	connectDB();

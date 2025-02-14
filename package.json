@@ -6,7 +6,6 @@
 		"server"
 	],
 	"scripts": {
-		"install": "npm install --workspaces",
 		"dev": "concurrently \"npm start --prefix server\" \"npm start --prefix client\"",
 		"build": "cd client && npm install && npm run build && cd ..",
 		"start": "npm run start --prefix server"
