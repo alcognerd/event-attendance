@@ -1,8 +1,9 @@
 import express from "express";
-import connectDB from "./db/connectDB.js";
 import dotenv from "dotenv";
-import attendanceRoutes from "./routes/attendanceRoutes.js";
 import cors from "cors";
+import path from "path";
+import connectDB from "./db/connectDB.js";
+import attendanceRoutes from "./routes/attendanceRoutes.js";
 import { connectRedis } from "./redis/redis.js";
 
 dotenv.config();
@@ -14,8 +15,18 @@ app.use(
 	})
 );
 app.use(express.json());
+app.get("/api/ping", (req, res) => {
+	res.json({ message: "Hello from Vercel API!" });
+});
 
-app.use("/attendance", attendanceRoutes);
+const __dirname = path.resolve();
+app.use(express.static(path.join(__dirname, "client/build")));
+
+app.get("*", (req, res) => {
+	res.sendFile(path.join(__dirname, "client/build", "index.html"));
+});
+
+app.use("/api/attendance", attendanceRoutes);
 
 app.listen(process.env.PORT || 5000, () => {
 	connectDB();
