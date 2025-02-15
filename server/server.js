@@ -25,14 +25,17 @@ app.get("/", (req, res) => {
 
 connectDB()
 	.then((conn) => {
+		console.log("Database connected to :" + conn.connection.host);
+		return connectRedis();
+	})
+	.then(() => {
 		app.listen(process.env.PORT || 5000, () => {
-			connectRedis();
-			logger.info("Server running ");
+			logger.info("Server running on: " + process.env.PORT || 5000);
 		});
-		console.log("server connected to :" + conn.connection.host);
 	})
 	.catch((error) => {
 		console.log(error);
+		process.exit(1);
 	});
 
 /* app.listen(process.env.PORT || 5000, () => {

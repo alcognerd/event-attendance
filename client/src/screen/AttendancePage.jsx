@@ -195,7 +195,12 @@ const AttendancePage = () => {
 								<div className="pl-3 ">
 									<p>Name: {scannedUser?.data?.userName}</p>
 									<p>E-mail: {scannedUser?.data?.email}</p>
-									<p>Registered to: {scannedUser?.data?.userName}</p>
+									<p>
+										Registered to:{" "}
+										{scannedUser?.data?.appliedTo.map((subEvent, i) => (
+											<span key={i}>{subEvent + ", "}</span>
+										))}
+									</p>
 								</div>
 							)}
 							{isError && (
